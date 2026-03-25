@@ -16,7 +16,7 @@ const TestResult = () => {
 
           // If we have a result ID, fetch from API
           if (localResult.resultId) {
-            const response = await fetch(`http://localhost:4000/api/test-results/${localResult.resultId}`);
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/test-results/${localResult.resultId}`);
             const data = await response.json();
 
             if (data.success) {

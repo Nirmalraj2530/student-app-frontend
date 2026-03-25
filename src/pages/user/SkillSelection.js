@@ -15,7 +15,7 @@ const SkillSelection = () => {
 
   const fetchSkills = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/skills");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/skills`);
       const data = await response.json();
       if (data.success) {
         setSkills(data.skills);

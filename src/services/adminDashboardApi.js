@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:4000/api/admin/dashboard";
+const BASE_URL = `${process.env.REACT_APP_API_URL}/api/admin/dashboard`;
 
 const getHeaders = () => ({
   "Content-Type": "application/json",

@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:4000"; // change if needed
+const BASE_URL = process.env.REACT_APP_API_URL; // change if needed
 
 const getToken = () => localStorage.getItem("token");
 

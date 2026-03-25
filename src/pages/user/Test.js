@@ -16,14 +16,14 @@ const Test = () => {
     const fetchTestData = async () => {
       try {
         // Fetch skill details
-        const skillRes = await fetch(`http://localhost:4000/api/skills/${skillName}`);
+        const skillRes = await fetch(`${process.env.REACT_APP_API_URL}/api/skills/${skillName}`);
         const skillData = await skillRes.json();
 
         if (skillData.success) {
           setSkill(skillData.skill);
 
           // Fetch questions for this skill
-          const questionsRes = await fetch(`http://localhost:4000/api/admin/questions?skill=${skillData.skill.title}`);
+          const questionsRes = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/questions?skill=${skillData.skill.title}`);
           const questionsData = await questionsRes.json();
 
           if (questionsData.success && questionsData.questions.length > 0) {
@@ -115,7 +115,7 @@ const Test = () => {
     // Save to backend
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const response = await fetch("http://localhost:4000/api/test-results/submit", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/test-results/submit`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

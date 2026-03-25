@@ -19,7 +19,7 @@ const SkillIntroduction = () => {
 
           // Fetch question count for this skill
           const questionsRes = await fetch(
-            `http://localhost:4000/api/admin/questions?skill=${apiSkill.title}`
+            `${process.env.REACT_APP_API_URL}/api/admin/questions?skill=${apiSkill.title}`
           );
           const questionsData = await questionsRes.json();
 

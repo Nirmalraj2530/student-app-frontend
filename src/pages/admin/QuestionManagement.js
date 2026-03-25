@@ -28,7 +28,7 @@ const QuestionManagement = () => {
 
   const fetchQuestions = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/admin/questions");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/questions`);
       const data = await response.json();
       if (data.success) {
         setQuestions(data.questions);
@@ -40,7 +40,7 @@ const QuestionManagement = () => {
 
   const fetchSkills = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/admin/skills");
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/skills`);
       const data = await response.json();
       if (data.success) {
         setSkills(data.skills);
@@ -54,8 +54,8 @@ const QuestionManagement = () => {
     e.preventDefault();
     try {
       const url = editingQuestion
-        ? `http://localhost:4000/api/admin/questions/${editingQuestion._id}`
-        : "http://localhost:4000/api/admin/questions";
+        ? `${process.env.REACT_APP_API_URL}/api/admin/questions/${editingQuestion._id}`
+        : `${process.env.REACT_APP_API_URL}/api/admin/questions`;
 
       const method = editingQuestion ? "PUT" : "POST";
 
@@ -81,7 +81,7 @@ const QuestionManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this question?")) {
       try {
-        await fetch(`http://localhost:4000/api/admin/questions/${id}`, {
+        await fetch(`${process.env.REACT_APP_API_URL}/api/admin/questions/${id}`, {
           method: "DELETE",
         });
         fetchQuestions();

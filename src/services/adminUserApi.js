@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:4000/api/admin/users";
+const BASE_URL = `${process.env.REACT_APP_API_URL}/api/admin/users`;
 
 export const fetchUsers = async () => {
   const res = await fetch(BASE_URL);
