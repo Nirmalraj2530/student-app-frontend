@@ -9,6 +9,7 @@ const DetailedReview = () => {
 
   useEffect(() => {
     fetchDetailedReview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [skillName]);
 
   const fetchDetailedReview = async () => {
