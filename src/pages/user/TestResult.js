@@ -12,7 +12,7 @@ const TestResult = () => {
   const savedResult = savedResultStr ? JSON.parse(savedResultStr) : null;
   const resultId = savedResult?.resultId;
 
-  const { data, isLoading: apiLoading, error } = useGetTestResultQuery(resultId, {
+  const { data, isLoading: apiLoading } = useGetTestResultQuery(resultId, {
     skip: !resultId,
   });
 

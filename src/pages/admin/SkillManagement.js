@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
 import {
   useGetSkillsQuery,
@@ -10,7 +10,7 @@ import { FiPlus, FiEdit2, FiTrash2, FiX, FiCode } from "react-icons/fi";
 import "./SkillManagement.css";
 
 const SkillManagement = () => {
-  const { data: skillsData, isLoading } = useGetSkillsQuery();
+  const { data: skillsData } = useGetSkillsQuery();
   const [createSkill] = useCreateSkillMutation();
   const [updateSkill] = useUpdateSkillMutation();
   const [deleteSkill] = useDeleteSkillMutation();

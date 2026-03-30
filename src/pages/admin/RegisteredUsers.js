@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FiSearch, FiEdit2, FiTrash2, FiX } from "react-icons/fi";
 import "./RegisteredUsers.css";
 import AdminLayout from "../../components/AdminLayout";

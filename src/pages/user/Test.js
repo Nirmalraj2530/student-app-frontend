@@ -15,7 +15,7 @@ const Test = () => {
   const skill = skillRes?.skill;
   const skillTitle = skill?.title || "";
 
-  const { data: questionsRes, isLoading: isQuestionsLoading } = useGetQuestionsQuery(skillTitle, {
+  const { data: questionsRes } = useGetQuestionsQuery(skillTitle, {
     skip: !skillTitle,
   });
 

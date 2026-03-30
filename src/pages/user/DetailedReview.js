@@ -12,7 +12,7 @@ const DetailedReview = () => {
   const savedResult = savedResultStr ? JSON.parse(savedResultStr) : null;
   const resultId = savedResult?.resultId;
 
-  const { data, isLoading: apiLoading, error } = useGetTestReviewQuery(resultId, {
+  const { data, isLoading: apiLoading } = useGetTestReviewQuery(resultId, {
     skip: !resultId,
   });
 
