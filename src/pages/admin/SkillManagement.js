@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
 import {
-  fetchSkills,
-  createSkill,
-  updateSkill,
-  deleteSkill,
-} from "../../services/adminSkillApi";
+  useGetSkillsQuery,
+  useCreateSkillMutation,
+  useUpdateSkillMutation,
+  useDeleteSkillMutation,
+} from "../../services/api";
 import { FiPlus, FiEdit2, FiTrash2, FiX, FiCode } from "react-icons/fi";
 import "./SkillManagement.css";
 
 const SkillManagement = () => {
-  const [skills, setSkills] = useState([]);
+  const { data: skillsData, isLoading } = useGetSkillsQuery();
+  const [createSkill] = useCreateSkillMutation();
+  const [updateSkill] = useUpdateSkillMutation();
+  const [deleteSkill] = useDeleteSkillMutation();
+
   const [showModal, setShowModal] = useState(false);
   const [editSkill, setEditSkill] = useState(null);
-
   const [form, setForm] = useState({
     key: "",
     title: "",
@@ -21,14 +24,7 @@ const SkillManagement = () => {
     icon: "",
   });
 
-  useEffect(() => {
-    loadSkills();
-  }, []);
-
-  const loadSkills = async () => {
-    const res = await fetchSkills();
-    if (res.success) setSkills(res.skills);
-  };
+  const skills = skillsData?.skills || [];
 
   const openAdd = () => {
     setEditSkill(null);
@@ -44,19 +40,25 @@ const SkillManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editSkill) {
-      await updateSkill(editSkill._id, form);
-    } else {
-      await createSkill(form);
+    try {
+      if (editSkill) {
+        await updateSkill({ id: editSkill._id, ...form }).unwrap();
+      } else {
+        await createSkill(form).unwrap();
+      }
+      setShowModal(false);
+    } catch (err) {
+      console.error("Failed to save skill", err);
     }
-    setShowModal(false);
-    loadSkills();
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Disable this skill?")) return;
-    await deleteSkill(id);
-    loadSkills();
+    try {
+      await deleteSkill(id).unwrap();
+    } catch (err) {
+      console.error("Failed to delete skill", err);
+    }
   };
 
   return (

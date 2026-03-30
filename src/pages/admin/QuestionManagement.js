@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiX } from "react-icons/fi";
+import { 
+  useGetQuestionsQuery, 
+  useGetSkillsQuery, 
+  useCreateQuestionMutation, 
+  useUpdateQuestionMutation, 
+  useDeleteQuestionMutation 
+} from "../../services/api";
 import "./QuestionManagement.css";
 import AdminLayout from "../../components/AdminLayout";
 
 const QuestionManagement = () => {
-  const [questions, setQuestions] = useState([]);
-  const [skills, setSkills] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,72 +26,37 @@ const QuestionManagement = () => {
 
   const difficulties = ["Easy", "Medium", "Hard"];
 
-  useEffect(() => {
-    fetchQuestions();
-    fetchSkills();
-  }, []);
+  const { data: questionsData, isLoading: questionsLoading } = useGetQuestionsQuery();
+  const { data: skillsData } = useGetSkillsQuery();
+  
+  const [createQuestion] = useCreateQuestionMutation();
+  const [updateQuestion] = useUpdateQuestionMutation();
+  const [deleteQuestion] = useDeleteQuestionMutation();
 
-  const fetchQuestions = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/questions`);
-      const data = await response.json();
-      if (data.success) {
-        setQuestions(data.questions);
-      }
-    } catch (err) {
-      console.error("Failed to fetch questions");
-    }
-  };
+  const questions = questionsData?.questions || [];
+  const skills = skillsData?.skills || [];
 
-  const fetchSkills = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/skills`);
-      const data = await response.json();
-      if (data.success) {
-        setSkills(data.skills);
-      }
-    } catch (err) {
-      console.error("Failed to fetch skills");
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingQuestion
-        ? `${process.env.REACT_APP_API_URL}/api/admin/questions/${editingQuestion._id}`
-        : `${process.env.REACT_APP_API_URL}/api/admin/questions`;
-
-      const method = editingQuestion ? "PUT" : "POST";
-
-      const token = localStorage.getItem("adminToken");
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        fetchQuestions();
-        resetForm();
+      if (editingQuestion) {
+        await updateQuestion({ id: editingQuestion._id, ...formData }).unwrap();
+      } else {
+        await createQuestion(formData).unwrap();
       }
+      resetForm();
     } catch (err) {
-      console.error("Failed to save question");
+      console.error("Failed to save question", err);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this question?")) {
       try {
-        await fetch(`${process.env.REACT_APP_API_URL}/api/admin/questions/${id}`, {
-          method: "DELETE",
-        });
-        fetchQuestions();
+        await deleteQuestion(id).unwrap();
       } catch (err) {
-        console.error("Failed to delete question");
+        console.error("Failed to delete question", err);
       }
     }
   };
@@ -187,7 +157,13 @@ const QuestionManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredQuestions.length > 0 ? (
+              {questionsLoading ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center", padding: "32px", color: "#64748b" }}>
+                    Loading questions...
+                  </td>
+                </tr>
+              ) : filteredQuestions.length > 0 ? (
                 filteredQuestions.map((question, index) => (
                   <tr key={question._id}>
                     <td>{index + 1}</td>

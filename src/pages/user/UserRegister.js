@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiUser, FiMail, FiPhone, FiBook, FiCalendar, FiArrowRight } from "react-icons/fi";
+import { useRegisterUserMutation } from "../../services/api";
 import "./UserRegister.css";
 
 const UserRegister = () => {
@@ -14,7 +15,7 @@ const UserRegister = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [registerUser, { isLoading: loading }] = useRegisterUserMutation();
 
   const handleChange = (e) => {
     setFormData({
@@ -75,20 +76,10 @@ const UserRegister = () => {
       return;
     }
 
-    setLoading(true);
-
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const data = await registerUser(formData).unwrap();
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -99,9 +90,7 @@ const UserRegister = () => {
       }
     } catch (error) {
       console.error("Registration error:", error);
-      setErrors({ general: "Server not running or network error" });
-    } finally {
-      setLoading(false);
+      setErrors({ general: error.data?.message || "Server not running or network error" });
     }
   };
 

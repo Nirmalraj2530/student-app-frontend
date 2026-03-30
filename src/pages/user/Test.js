@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useGetSkillByKeyQuery, useGetQuestionsQuery, useSubmitTestMutation } from "../../services/api";
 import "./Test.css";
 
 const Test = () => {
@@ -10,44 +11,36 @@ const Test = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [skill, setSkill] = useState(null);
+  const { data: skillRes, isLoading: isSkillLoading } = useGetSkillByKeyQuery(skillName);
+  const skill = skillRes?.skill;
+  const skillTitle = skill?.title || "";
+
+  const { data: questionsRes, isLoading: isQuestionsLoading } = useGetQuestionsQuery(skillTitle, {
+    skip: !skillTitle,
+  });
+
+  const [submitTest] = useSubmitTestMutation();
 
   useEffect(() => {
-    const fetchTestData = async () => {
-      try {
-        // Fetch skill details
-        const skillRes = await fetch(`${process.env.REACT_APP_API_URL}/api/skills/${skillName}`);
-        const skillData = await skillRes.json();
-
-        if (skillData.success) {
-          setSkill(skillData.skill);
-
-          // Fetch questions for this skill
-          const questionsRes = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/questions?skill=${skillData.skill.title}`);
-          const questionsData = await questionsRes.json();
-
-          if (questionsData.success && questionsData.questions.length > 0) {
-            // Shuffle questions
-            const shuffled = [...questionsData.questions].sort(() => Math.random() - 0.5);
-            setQuestions(shuffled);
-            // Set timer: 1 minute per question
-            setTimeLeft(shuffled.length * 60);
-          } else {
-            alert("No questions available for this skill");
-            navigate("/skills");
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load test", err);
-        alert("Failed to load test");
+    if (questionsRes?.success) {
+      if (questionsRes.questions.length > 0) {
+        const shuffled = [...questionsRes.questions].sort(() => Math.random() - 0.5);
+        setQuestions(shuffled);
+        setTimeLeft(shuffled.length * 60);
+      } else {
+        alert("No questions available for this skill");
         navigate("/skills");
-      } finally {
-        setLoading(false);
       }
-    };
+      setLoading(false);
+    }
+  }, [questionsRes, navigate]);
 
-    fetchTestData();
-  }, [skillName, navigate]);
+  useEffect(() => {
+    if (!isSkillLoading && (!skillRes || !skillRes.success)) {
+      alert("Failed to load skill data");
+      navigate("/skills");
+    }
+  }, [isSkillLoading, skillRes, navigate]);
 
   // Timer countdown
   useEffect(() => {
@@ -115,28 +108,21 @@ const Test = () => {
     // Save to backend
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/test-results/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          skill: skill?.title || skillName,
-          score,
-          correct: correctAnswers,
-          wrong: wrongAnswers,
-          unattempted,
-          totalQuestions: questions.length,
-          status,
-          userEmail: user?.email,
-          answers: Object.keys(selectedAnswers).map(index => ({
-            questionId: questions[index]._id,
-            selectedAnswer: selectedAnswers[index]
-          }))
-        }),
-      });
+      const data = await submitTest({
+        skill: skill?.title || skillName,
+        score,
+        correct: correctAnswers,
+        wrong: wrongAnswers,
+        unattempted,
+        totalQuestions: questions.length,
+        status,
+        userEmail: user?.email,
+        answers: Object.keys(selectedAnswers).map(index => ({
+          questionId: questions[index]._id,
+          selectedAnswer: selectedAnswers[index]
+        }))
+      }).unwrap();
 
-      const data = await response.json();
       if (data.success) {
         // Save result with questions and answers for review
         localStorage.setItem(`testResult_${skillName}`, JSON.stringify({

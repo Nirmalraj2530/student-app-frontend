@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useGetTestResultQuery } from '../../services/api';
 import './TestResult.css';
 
 const TestResult = () => {
@@ -7,49 +8,34 @@ const TestResult = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const savedResultStr = localStorage.getItem(`testResult_${skillName}`);
+  const savedResult = savedResultStr ? JSON.parse(savedResultStr) : null;
+  const resultId = savedResult?.resultId;
+
+  const { data, isLoading: apiLoading, error } = useGetTestResultQuery(resultId, {
+    skip: !resultId,
+  });
+
   useEffect(() => {
-    const fetchResult = async () => {
-      try {
-        const savedResult = localStorage.getItem(`testResult_${skillName}`);
-        if (savedResult) {
-          const localResult = JSON.parse(savedResult);
+    let finalResult = null;
 
-          // If we have a result ID, fetch from API
-          if (localResult.resultId) {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/test-results/${localResult.resultId}`);
-            const data = await response.json();
+    if (resultId && data?.success) {
+      finalResult = {
+        skillName: data.result.skill,
+        totalQuestions: data.result.totalQuestions,
+        correctAnswers: data.result.correct,
+        wrongAnswers: data.result.wrong,
+        unattempted: data.result.unattempted,
+        score: data.result.score,
+        status: data.result.status,
+      };
+    } else if (savedResult) {
+      finalResult = savedResult;
+    }
 
-            if (data.success) {
-              setResult({
-                skillName: data.result.skill,
-                totalQuestions: data.result.totalQuestions,
-                correctAnswers: data.result.correct,
-                wrongAnswers: data.result.wrong,
-                unattempted: data.result.unattempted,
-                score: data.result.score,
-                status: data.result.status,
-              });
-            } else {
-              setResult(localResult);
-            }
-          } else {
-            setResult(localResult);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch result", err);
-        // Fallback to localStorage
-        const savedResult = localStorage.getItem(`testResult_${skillName}`);
-        if (savedResult) {
-          setResult(JSON.parse(savedResult));
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResult();
-  }, [skillName]);
+    setResult(finalResult);
+    setLoading(resultId ? apiLoading : false);
+  }, [data, apiLoading, resultId, savedResult]);
 
   if (loading) {
     return (

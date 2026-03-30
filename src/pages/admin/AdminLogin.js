@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUser, FiLock, FiArrowRight, FiShield, FiAlertCircle } from "react-icons/fi";
+import { useAdminLoginMutation } from "../../services/api";
 import "./AdminLogin.css";
 
 const AdminLogin = () => {
@@ -12,7 +13,7 @@ const AdminLogin = () => {
   });
 
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [adminLogin, { isLoading: loading }] = useAdminLoginMutation();
 
   const handleChange = (e) => {
     setFormData({
@@ -42,20 +43,10 @@ const AdminLogin = () => {
       return;
     }
 
-    setLoading(true);
-
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/admin/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const data = await adminLogin(payload).unwrap();
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         localStorage.setItem("adminToken", data.token);
         localStorage.setItem("adminUser", JSON.stringify(data.admin));
         navigate("/admin/dashboard");
@@ -63,9 +54,7 @@ const AdminLogin = () => {
         alert(data.message || "Invalid admin credentials");
       }
     } catch (error) {
-      alert("Server error");
-    } finally {
-      setLoading(false);
+      alert(error.data?.message || "Server error");
     }
   };
 

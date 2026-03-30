@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiMail, FiArrowRight, FiHome, FiUser } from "react-icons/fi";
+import { useLoginMutation } from "../../services/api";
 import "./UserLogin.css";
 
 const UserLogin = () => {
@@ -10,6 +11,7 @@ const UserLogin = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [login, { isLoading }] = useLoginMutation();
 
   const handleChange = (e) => {
     setFormData({
@@ -47,17 +49,9 @@ const UserLogin = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const data = await login(formData).unwrap();
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -68,7 +62,7 @@ const UserLogin = () => {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setErrors({ email: "Server not running or network error" });
+      setErrors({ email: error.data?.message || "Server not running or network error" });
     }
   };
 
@@ -110,8 +104,8 @@ const UserLogin = () => {
               )}
             </div>
 
-            <button type="submit" className="btn-login">
-              Sign In <FiArrowRight />
+            <button type="submit" className="btn-login" disabled={isLoading}>
+              {isLoading ? "Signing In..." : <><span style={{ marginRight: '8px' }}>Sign In</span><FiArrowRight /></>}
             </button>
           </form>
 

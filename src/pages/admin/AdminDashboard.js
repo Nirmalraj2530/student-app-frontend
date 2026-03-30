@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
 import {
-  fetchDashboardStats,
-  fetchRecentActivity,
-  fetchPopularSkills,
-} from "../../services/adminDashboardApi";
+  useGetDashboardStatsQuery,
+  useGetRecentActivityQuery,
+  useGetPopularSkillsQuery,
+} from "../../services/api";
 import {
   FiUsers,
   FiFileText,
@@ -17,27 +17,21 @@ import {
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [skills, setSkills] = useState([]);
+  const { data: statsData, isLoading: statsLoading } = useGetDashboardStatsQuery();
+  const { data: activityData, isLoading: activityLoading } = useGetRecentActivityQuery();
+  const { data: skillsData, isLoading: skillsLoading } = useGetPopularSkillsQuery();
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
+  const stats = statsData?.stats || null;
+  const activities = activityData?.recentTests || [];
+  const skills = skillsData?.skills || [];
 
-  const loadDashboard = async () => {
-    try {
-      const statsRes = await fetchDashboardStats();
-      const activityRes = await fetchRecentActivity();
-      const skillsRes = await fetchPopularSkills();
-
-      if (statsRes?.success) setStats(statsRes.stats);
-      if (activityRes?.success) setActivities(activityRes.recentTests);
-      if (skillsRes?.success) setSkills(skillsRes.skills);
-    } catch (error) {
-      console.error("Dashboard load failed", error);
-    }
-  };
+  if (statsLoading || activityLoading || skillsLoading) {
+    return (
+      <AdminLayout>
+        <div style={{ color: '#cbd5e1', padding: '40px', textAlign: 'center' }}>Loading dashboard...</div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

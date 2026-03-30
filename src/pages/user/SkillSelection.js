@@ -1,29 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useGetSkillsUserQuery } from "../../services/api";
 import "./SkillSelection.css";
 
 const SkillSelection = () => {
   const navigate = useNavigate();
-  const [skills, setSkills] = useState([]);
-
+  const { data, isLoading } = useGetSkillsUserQuery();
+  const skills = data?.skills || [];
+  
   // Get user from localStorage
   const user = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => {
-    fetchSkills();
-  }, []);
-
-  const fetchSkills = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/skills`);
-      const data = await response.json();
-      if (data.success) {
-        setSkills(data.skills);
-      }
-    } catch (err) {
-      console.error("Failed to fetch skills");
-    }
-  };
 
   // Logout function
   const handleLogout = () => {
@@ -78,9 +65,14 @@ const SkillSelection = () => {
               </div>
             ))}
 
-            {skills.length === 0 && (
+            {skills.length === 0 && !isLoading && (
               <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
                 No skills available at the moment.
+              </div>
+            )}
+            {isLoading && (
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+                Loading skills...
               </div>
             )}
           </div>

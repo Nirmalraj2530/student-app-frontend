@@ -3,40 +3,29 @@ import { FiSearch, FiEdit2, FiTrash2, FiX } from "react-icons/fi";
 import "./RegisteredUsers.css";
 import AdminLayout from "../../components/AdminLayout";
 import {
-  fetchUsers,
-  deleteUser,
-  updateUser,
-} from "../../services/adminUserApi";
+  useGetUsersQuery,
+  useDeleteUserMutation,
+  useUpdateUserMutation,
+} from "../../services/api";
 
 const RegisteredUsers = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // UPDATE STATE
   const [showEdit, setShowEdit] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  const { data: usersData, isLoading: loading } = useGetUsersQuery();
+  const [deleteUser] = useDeleteUserMutation();
+  const [updateUser] = useUpdateUserMutation();
 
-  const loadUsers = async () => {
-    setLoading(true);
-    try {
-      const res = await fetchUsers();
-      if (res.success) setUsers(res.users);
-    } catch (err) {
-      console.error("Failed to fetch users", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const users = usersData?.users || [];
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
-    await deleteUser(id);
-    loadUsers();
+    try {
+      await deleteUser(id).unwrap();
+    } catch (err) {
+      console.error("Failed to delete user", err);
+    }
   };
 
   const handleEditClick = (user) => {
@@ -45,14 +34,18 @@ const RegisteredUsers = () => {
   };
 
   const handleUpdate = async () => {
-    await updateUser(selectedUser._id, {
-      name: selectedUser.name,
-      email: selectedUser.email,
-      skill: selectedUser.skill,
-      score: selectedUser.score,
-    });
-    setShowEdit(false);
-    loadUsers();
+    try {
+      await updateUser({
+        id: selectedUser._id,
+        name: selectedUser.name,
+        email: selectedUser.email,
+        skill: selectedUser.skill,
+        score: selectedUser.score,
+      }).unwrap();
+      setShowEdit(false);
+    } catch (err) {
+      console.error("Failed to update user", err);
+    }
   };
 
   const filteredUsers = users.filter(

@@ -1,45 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchSkillByKey } from "../../services/userSkillApi";
+import { useGetSkillByKeyQuery, useGetQuestionsQuery } from "../../services/api";
 import "./SkillIntroduction.css";
 
 const SkillIntroduction = () => {
   const { skillName } = useParams();
-  const [skill, setSkill] = useState(null);
-  const [questionCount, setQuestionCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data: skillRes, isLoading: isSkillLoading, error: skillError } = useGetSkillByKeyQuery(skillName);
+  const skillData = skillRes?.skill;
+  const skillTitle = skillData?.title || "";
 
-  useEffect(() => {
-    const loadSkill = async () => {
-      try {
-        const res = await fetchSkillByKey(skillName);
-        if (res.success) {
-          const apiSkill = res.skill;
+  const { data: questionsRes, isLoading: isQuestionsLoading } = useGetQuestionsQuery(skillTitle, {
+    skip: !skillTitle,
+  });
 
-          // Fetch question count for this skill
-          const questionsRes = await fetch(
-            `${process.env.REACT_APP_API_URL}/api/admin/questions?skill=${apiSkill.title}`
-          );
-          const questionsData = await questionsRes.json();
-
-          if (questionsData.success) {
-            setQuestionCount(questionsData.total || 0);
-          }
-
-          setSkill(apiSkill);
-        } else {
-          setError(res.message || "Skill not found");
-        }
-      } catch (err) {
-        setError("Failed to load skill data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSkill();
-  }, [skillName]);
+  const questionCount = questionsRes?.total || 0;
+  const loading = isSkillLoading || (skillTitle && isQuestionsLoading);
+  const error = skillError ? "Failed to load skill data" : (skillRes && !skillRes.success ? skillRes.message : null);
+  const skill = skillData;
 
   return (
     <div className="skill-intro-page">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useGetTestReviewQuery } from '../../services/api';
 import './DetailedReview.css';
 
 const DetailedReview = () => {
@@ -7,64 +8,32 @@ const DetailedReview = () => {
   const [reviewData, setReviewData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const savedResultStr = localStorage.getItem(`testResult_${skillName}`);
+  const savedResult = savedResultStr ? JSON.parse(savedResultStr) : null;
+  const resultId = savedResult?.resultId;
+
+  const { data, isLoading: apiLoading, error } = useGetTestReviewQuery(resultId, {
+    skip: !resultId,
+  });
+
   useEffect(() => {
-    fetchDetailedReview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [skillName]);
+    let finalReviewData = null;
 
-  const fetchDetailedReview = async () => {
-    try {
-      const savedResult = localStorage.getItem(`testResult_${skillName}`);
-      if (savedResult) {
-        const result = JSON.parse(savedResult);
-
-        // Fetch from API if we have result ID
-        if (result.resultId) {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/test-results/${result.resultId}/review`);
-          const data = await response.json();
-
-          if (data.success) {
-            setReviewData(data.review);
-          } else {
-            // Fallback to localStorage
-            if (result.questions) {
-              setReviewData({
-                score: result.score,
-                correct: result.correctAnswers,
-                wrong: result.wrongAnswers,
-                questions: result.questions
-              });
-            }
-          }
-        } else if (result.questions) {
-          // Use localStorage data
-          setReviewData({
-            score: result.score,
-            correct: result.correctAnswers,
-            wrong: result.wrongAnswers,
-            questions: result.questions
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch review', err);
+    if (resultId && data?.success) {
+      finalReviewData = data.review;
+    } else if (savedResult && savedResult.questions) {
       // Fallback to localStorage
-      const savedResult = localStorage.getItem(`testResult_${skillName}`);
-      if (savedResult) {
-        const result = JSON.parse(savedResult);
-        if (result.questions) {
-          setReviewData({
-            score: result.score,
-            correct: result.correctAnswers,
-            wrong: result.wrongAnswers,
-            questions: result.questions
-          });
-        }
-      }
-    } finally {
-      setLoading(false);
+      finalReviewData = {
+        score: savedResult.score,
+        correct: savedResult.correctAnswers,
+        wrong: savedResult.wrongAnswers,
+        questions: savedResult.questions
+      };
     }
-  };
+
+    setReviewData(finalReviewData);
+    setLoading(resultId ? apiLoading : false);
+  }, [data, apiLoading, resultId, savedResult]);
 
   if (loading) {
     return (

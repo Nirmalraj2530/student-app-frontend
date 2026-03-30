@@ -2,6 +2,9 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
 
+import "./services/fetchInterceptor";
+import GlobalLoader from "./components/common/GlobalLoader";
+
 // Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -23,6 +26,7 @@ function App() {
   return (
     <Router>
       <div className="App">
+        <GlobalLoader />
         <Routes>
           {/* User Routes */}
           <Route path="/" element={<Home />} />
